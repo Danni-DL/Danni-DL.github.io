@@ -1,0 +1,57 @@
+*The goal of this coursework is to generate multiple plot types using PROC SGPLOT.
+
+/*1. With PROC SGPLOT, create a horizontal bar chart using the depression data set in the course data folder.
+  a. Use the education variable as the category variable.
+  b. Use the bed days variable as the response variable.
+  c. Request the mean statistic.
+  d. The default data skin is none. Request a different skin type.*/
+title 'Q1 data analysis on depression data set';
+PROC SGPLOT data=course.depression ;
+    
+    hbar education  / response=beddays stat=mean dataskin=sheen ;
+run;
+
+/*2. With PROC SGPLOT, create overlaid vertical bar graphs using the sashelp.cars data set.
+  a. Use type as the category variable for both vertical bar graphs.
+  b. For the first bar graph, use the msrp variable as the response variable and the sum statistic.
+  c. For the second bar graph, use the invoice variable as the response variable and the sum statistic.
+  d. Set the transparency for both bar charts to .3.
+  e. For the second bar graph, set a bar width of .5.*/
+title 'Q2 data analysis on cars data set';
+PROC SGPLOT data=sashelp.cars;
+    vbar type / response=msrp stat=sum TRANSPARENCY=0.3 ;
+    vbar type / response=invoice stat=sum TRANSPARENCY=0.3 barwidth=0.5;
+run;
+
+/*3. Summarize the vs data set in the course folder and store the results in a temporary data set. HINT: PROC MEANS.
+  a. Suppress the printing of any output.
+  b. Use the NWAY option in the PROC MEANS statement. 
+  c. Use the vstestcd, vstest, visitnum, and visit variables in the CLASS statement.
+  d. Use the numeric result variable from the vs data set in the VAR statement.
+  e. Request the mean statistic in the OUTPUT OUT= statement. */
+title 'Q3 data analysis on vs data set';
+PROC MEANS data=course.vs noprint nway;
+    class vstestcd vstest visitnum visit;
+    var vsstresn;
+    OUTPUT OUT=vs mean=mean_;
+run;
+
+
+
+/*4. Run a PROC SPLOT step on the data set created in #3.
+  a. Apply the NOAUTOLEGEND option, on the PROC SGPLOT statement, to prevent a legend from being included as part of the graph. 
+  b. Restrict the plot to display only the results of the heart rate vital sign. HINT: use a WHERE statement. 
+  c. Create a series plot with visit variable (the character variable containing the week number) on the x axis and the mean on the y axis.
+  d. Overlay a scatter plot with visit variable (the character variable containing the week number) on the x axis and the mean on the y axis.
+  e. Use the MARKERATTRS option in the SCATTER statement to change the symbol to star.
+  f. Use a YAXIS statement and the VALUES= option to display tick marks from 59.9 to 60.4, by .05. 
+  g. Apply a label to the mean variable, of ‘Heart Rate’. */
+
+title 'Q4 data analysis on vs data set';
+PROC SgPLOT data=vs NOAUTOLEGEND;
+    where vstest='Heart Rate';
+    series x=visit y=mean_ ;
+    scatter x=visit y=mean_ / MARKERATTRS=(symbol=star);
+    yaxis values=(59.9 to 60.4 by 0.05);
+    label mean_='Heart Rate';
+run; 
