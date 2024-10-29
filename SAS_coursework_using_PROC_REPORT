@@ -1,0 +1,67 @@
+*The goal of this coursework is to generate reports with PROC REPORT.
+
+/*1. Create a detailed report based on the learn_modalities data set in the course folder.
+a. In the PROC REPORT step, use the OBS= data set option to display only the first 50 observations. 
+b. Subset to only those observations from Arizona.
+c. Include a column for district name, learning modality, and number of students, in that order.
+d. Include a spanning header that will appear over both the learning modality and number of students columns.*/
+title 'Q1 report on the learn_modalities data set';
+PROC REPORT data=course.learn_modalities (obs=50);
+    where state='AZ';
+    column district_name ('spanning header' learning_modality student_count);
+run;
+
+
+/*2. Create a summary report based on the diabetes data set in the course folder.
+a. Include a column for location, frame, waist, and hip, in that order. 
+b. Apply the GROUP usage to location and frame.
+c. Request the max statistic for waist and apply a column header.
+d. Request the max statistic for hip and apply a column header.*/
+title 'Q2 report on the diabetes data set';
+PROC REPORT data=course.diabetes;
+    column location frame waist hip;
+    define location / group; 
+    define frame / group; 
+    define waist / 'waist_' max;
+    define hip / 'hip_' max;
+run;
+
+
+/*3. Create a report based on the budget data set in the course folder.
+a. Include department and the years 2018-2020.
+b. Use the department variable as column headers. Under those headers should be the other variables. 
+c. Suppress the printing of the department variable’s label by applying a blank header (‘ ‘) in the DEFINE statement.*/
+title'Q3 report on the diabetes data set';
+PROC REPORT data=course.budget;
+    column department,(yr2018-yr2020);
+    define department / across '';
+run;    
+
+
+/*4. Create a summary report based on the employee_donations data set in the course folder.
+a. Include a column for paid by, quarter 1, quarter 2, quarter 3, and quarter 4.
+b. Apply the GROUP usage to the paid by variable.
+c. Apply the dollar8. format to the quarter variables. It is ok to use a FORMAT statement.
+d. Apply a light yello background to the quarter 4 column.*/
+title'Q4 report on the diabetes data set';
+PROC REPORT data=course.employee_donations;
+    column paid_by qtr1-qtr4;
+    define paid_by / group ;
+    define qtr1-qtr4 / format=dollar8.;
+    define qtr4 / style(column)=[background=lightyellow];
+run;
+
+/*5. Create a report based on the sashelp.cars data set.
+a. Use origin as a grouping variable.
+b. Use type as column headers.
+c. Request the n statistics under the type.
+d. Suppress the printing of the label for all three report items.
+e. Ensure no dots are in the final report. Print a 0 (zero). HINT: system option.*/
+title'Q5 report on the diabetes data set';
+PROC REPORT data=sashelp.cars;
+    column origin type,n;    
+    define origin / group '';
+    define type / across '';
+    define n /  '';
+    option missing=0;
+run;
