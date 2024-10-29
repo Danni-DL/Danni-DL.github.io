@@ -1,0 +1,89 @@
+*The goal of this coursework is to to use PROC MEANS to calculate simple statistics on numeric variables and to use PROC UNIVARIATE to calculate statistics and generate plots
+
+/*1. Run a PROC MEANS step on the Using primary_biliary_cirrhosis data set in the course data folder. 
+a. Request six statistics to be printed, that do not include n, mean, min, or max.
+b. Use all numeric variables as analysis variables. HINT: you don’t need a VAR statement.*/
+title "6 numeric variables for primary_biliary_cirrhosis data set";
+PROC MEANS data=course.primary_biliary_cirrhosis mode range std cv uclm lclm;
+run;
+
+/*2. Run a PROC MEANS step on the diabetes data set in the course data folder. 
+a. Generate results by the frame variable, using a CLASS statement.
+b. Calculate the count, sum, and mean statistics for the waist and hip variables.*/
+title "count, sum, and mean statistics for the waist and hip variables";
+PROC MEANS data=course.diabetes n sum mean;
+    class frame;   
+    var waist hip;
+run;    
+
+/*3. Run a PROC MEANS on the sashelp.orsales data set.
+a. Suppress the printed out.
+b. Use the option that limits the output statistics to the observations with the highest _TYPE_ value.
+c. Subset to year 2002 data.
+d. Generate statistics by the combination of product line and product category.
+e. Use the quantity, profit, and retail price variables as analysis variables.
+f. Create an output data set.
+  i. Request the sum statistic. Hint: put the statistic name in the OUTPUT statement/look at the documentation for the OUTPUT statement.
+  ii. Use the AUTONAME option in the OUTPUT statement.*/
+title "quantity, profit, and retail price statistics by the combination of product line and product category";
+PROC MEANS data=sashelp.orsales noprint nway ;
+    class product_line product_category;
+    var quantity profit total_retail_price;
+    where year=2002;
+    output out=orsales sum=/ autoname;
+ run;
+/*proc print data=orsales;
+run;*/
+
+/*4. Run a PROC PRINT on the data set generated in #3.
+a. Suppress the observation number.
+b. Print only the observations that have a product line of Sports
+c. Apply the dollar12.2 format to the sum of profit variable.
+d. Display only the product line, category, and profit variables.*/
+title "product line, category, and profit statistics of sports";
+PROC PRINT data=orsales noobs;
+    where product_line='Sports';
+    format profit_sum dollar12.2;
+    var product_line product_category profit_sum;
+run;    
+
+/*5. Modify your code from #3: 
+a. Create an output data set with a different name.
+b. Calculate the sum and mean statistics for the profit and retail price variables. 
+c. Supply your own variable names in the output data set.*/
+title "sum and mean statistics for the profit and retail price variables";
+PROC MEANS data=sashelp.orsales noprint nway;
+    class product_line product_category;
+    var profit total_retail_price;
+    where year=2002;
+    output out=orsales_2 sum(profit total_retail_price)=profit_sum retail_sum
+                         mean(profit total_retail_price)=profit_mean retail_mean;
+run;
+
+/*6. Run a PROC UNIVARIATE on the diabetes data set in the course data folder. 
+a. Generate results by the gender variable, using a BY statement.
+b. Use the stabilized glucose variable as the analysis variable. 
+c. Request confidence limits information. Hint: look at the documentation for the PROC UNIVARIATE statement.*/
+title "statistics information for stabilized glucose variable by gender";
+proc sort data=course.diabetes out=diabetes;
+    by gender;
+run;
+
+PROC UNIVARIATE data=diabetes cibasic;
+    by gender;
+    var stab_glu;
+run;
+
+/*7. Create a histogram with PROC UNIVARIATE on the diabetes data set in the course data folder. 
+a. Suppress the printing of all output, except the histogram.
+b. Use gender as the classification variable.
+c. Use cholesterol as the analysis variable.
+d. Use the INSET statement to add insets with descriptive statistics to the histograms. 
+  i. Include the mean and standard deviation. 
+  ii. Use the POSITION option to place the inset in the northeast (NE) corner.*/
+title "histogram for cholesterol by gender";
+PROC UNIVARIATE data=course.diabetes noprint;
+    class gender;
+    histogram chol ;
+    inset mean std / position=NE;
+run;    
