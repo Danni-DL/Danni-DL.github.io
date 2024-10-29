@@ -1,0 +1,65 @@
+*This is a coursework from sas programming and the goal is to use PROC PRINT to view data and to use PROC FREQ to obtain counts, frequencies, and statistics
+
+/*1. Run PROC PRINT on the data in the sashelp.failure data set.
+a. Use the cause variable as the BY variable. This will require creating a temporary sorted data set prior to the PROC PRINT step.
+b. Print only the day and count variables. */
+title 'table1';
+PROC SORT data=sashelp.failure out=failure;
+	by cause;
+run;
+PROC PRINT data=failure; 
+    by cause;
+    var day count;
+run;
+
+/*2. Run a PROC PRINT on the employee_donations data set in the course data folder.
+a. Use the correct system option to print 0 (zero) instead of . (missing).
+b. Suppress the printing of the observation number column.
+c. Add a FORMAT statement to print the quarter variables with a dollar sign and two decimal places – the dollar8.2 format.
+d. Use a LABEL statement inside of PROC PRINT, to add a label for the type of payment variable. 
+e. Print the variables in the order of: type of payment, recipient, then the quarter variables.
+f. Include an overall sum for the quarter variables.*/
+title 'table2';
+option missing=0;
+PROC PRINT data=course.employee_donations label noobs;    
+    format qtr1-qtr4 dollar8.2;
+    label paid_by="the type of payment";
+    var paid_by recipients qtr1-qtr4;
+run;
+
+/*3. Determine the gender distribution (PROC FREQ) within the primary_biliary_cirrhosis data set in the course data folder.
+a. Note, the primary_biliary_cirrhosis data set contains subjects that were not given any treatment.
+ Use a WHERE statement to exclude those observations. 
+b. Use the sex variable in the TABLES statement.*/
+title 'table3';
+PROC FREQ data=course.primary_biliary_cirrhosis;
+    where drug ^= "not randomized";
+    tables sex ;
+run;
+ 
+/*4. Using primary_biliary_cirrhosis data set in the course data folder, PROC FREQ to see the crosstabulation of sex and stage.
+a. Subset to subjects given treatment and subjects under the age of 50.*/
+title 'table4';
+PROC FREQ data=course.primary_biliary_cirrhosis;
+    tables sex*stage;
+    where drug ^= "not randomized" and age<50;
+run;    
+
+/*5. Using the customer_dim data set in the course data folder, PROC FREQ to see the crosstabulation of customer type and customer group.
+a. Subset to customers over the age of 50.
+b. Use a second TABLES statement, changing the order of type and group. You might find one way more informative or more preferable. 
+c. Use the LIST option on both TABLES statements. This provides the percent and cumulative percent values in list format.*/
+title 'table5';
+PROC FREQ data=course.customer_dim;
+    tables customer_type*customer_group / list;
+    where customer_age>50;
+    
+    tables customer_group*customer_type / list;
+run;
+
+/*6. Run a PROC FREQ step on the migraine data set in the course data folder using the treatment and response variables.
+a. Request the sensitivity and specificity estimates.*/
+title "table6";
+PROC FREQ data=course.migraine;
+    tables treatment*response / senspec;
+run;
