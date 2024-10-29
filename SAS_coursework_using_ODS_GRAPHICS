@@ -1,0 +1,52 @@
+*The goal of the coursework is to generat default ODS Graphics output and to select the desired plots.
+
+/*1. Run a PROC UNIVARIATE on the sashelp.bweight data set.
+     a. Request all available plots.
+     b. Use the visit variable as the BY variable.
+     c. Use the baby’s birth weight as the analysis variable.
+     d. In the results, keep only the plots. Use an ODS statement to accomplish this. PROC UNIVARIATE generates two different “plots” output. Do not include the SSPlots in the results. */
+title'Q1 data analysis on bweight';
+proc sort data=sashelp.bweight out=bweight;
+    by visit;
+run;
+
+ods select plots; 
+PROC UNIVARIATE data=bweight plots;
+    by visit;
+    var weight;
+run;   
+
+
+/*2. Run a PROC FREQ on the dm data set in the course folder, under the course data folder.
+     a. Request a combination (crosstabulation) of the armcd and race variables.
+     b. Exclude the row and column percentages from the table.
+     c. Within the PLOTS= option, request only the frequency plot. 
+     d. Customize the frequency plot to group by the armcd variable. Note, the value you use in the GROUPBY option is dependent upon the order you list the variables in the TABLES statement.
+     e. Customize the frequency plot to control the two-way layout with the cluster layout, which displays groups of adjacent bars.*/
+
+title'Q2 data analysis on dm';
+PROC FREQ data=course.dm ;
+
+    tables armcd * race / norow nocol plots(only)=(freqplot( groupby=row twoway=cluster));
+    
+run;
+
+
+/*3. Run a PROC FREQ on the depression data set in the course folder.
+     a. Request a combination (crosstabulation) of the number of bed days and acute illness variables.
+     b. Request the AGREE test.
+     c. Within the PLOTS= option, request only the agreemnet plot. */
+title'Q3 data analysis on depression';
+PROC FREQ data=course.depression;
+    tables beddays*acuteillness/ agree plots=(agreeplot);
+run;
+
+/*4. Replicate the PROC GLM code from the lecture notes.
+     a. Request the diagnostics plots.
+     b. Change the armcd variable to race.*/
+title'Q4 data analysis on dmvs';
+proc glm data=course.dmvs plots=(diagnosticspanel);
+    class race;
+    model cfb=race sysbp0 / solution;
+run;
+quit;
