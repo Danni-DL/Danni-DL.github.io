@@ -1,0 +1,53 @@
+*The goal of this lab is to generate multiple plot types using PROC SGPANEL and to create similar graphs using both PROC SGPLOT and PROC SGPANEL;
+
+/*1. With PROC SGPANEL, create a panel of horizontal box plots using the prostate data set in the course folder.
+a. Subset to a tumor size that is not -9999.
+b. Panel by the treatment and stage variables.
+c. Force the graphs to be in four columns. 
+d. Use tumor size as the analysis variable.
+e. Use the DISPLAYSTATS option to display the mean value within each graph.
+f. Make the outlier marker color red.*/
+title 'Q1 data analysis on prostate data set';
+PROC SGPANEL data=course.prostate(where=(tumorsize^=-9999));
+    panelby treatment stage/ columns=4;
+    hbox tumorsize / DISPLAYSTATS=(mean) outlierattrs=(color=red);
+run;    
+
+/*2. With PROC SGPANEL, create panel of histograms with density curves using the preemies data set in the course folder.
+a. Suppress the creation of a legend, using the NOAUTOLEGEND option.
+b. Panel by the sex variable.
+c. Remove the variable names from the cell headings of the panel layout.
+d. Use the bw variable to generate both the histogram and the density curve.
+e. Apply a label of “Birth Weight” to the numeric result variable.
+f. Change the color of the density curve to purple.
+g. Change the row axis label to ‘Percent (%)’ and specify values of 0 to 50 by 10.*/
+title 'Q2 data analysis on preemies data set';
+PROC SGPANEL data=course.preemies NOAUTOLEGEND;
+    panelby sex / novarname;
+    histogram bw ;
+    density bw / lineattrs=(color=purple) ;
+    label bw='Birth Weight';
+    rowaxis label='Percent (%)' values=(0 to 50 by 10);
+    
+run;
+
+/*3. Generate the same histograms and density curves as you did in #2, using PROC SGPLOT.
+a. Use a BY statement to create one graph for each visit.
+b. You’ll notice that the label of the BY variable is included in the title of the graph. This is called a ‘by line’. There is no option within PROC SGPLOT to change that, 
+as there is in PROC SGPANEL. Use a system option to suppress the printing of the byline. 
+c. Use this following TITLE statement to generate a title that contains the value of the visit but not the variable name/label.
+title2 '#byvar1 = #byval1 for this graph';*/
+title1 'Q3 data analysis on preemies data set';
+title2 '#byvar1 = #byval1 for this graph';
+proc sort data=course.preemies out=preemies;
+    by sex;
+run;    
+options nobyline;
+PROC SGPlot data=preemies NOAUTOLEGEND;
+    by sex  ;
+    histogram bw ;
+    density bw / lineattrs=(color=purple) ;
+    label bw='Birth Weight';
+    yaxis label='Percent (%)' values=(0 to 50 by 10);
+    
+run;
