@@ -1,4 +1,4 @@
-*The goal of this coursework is to generate reports with PROC REPORT.
+*The goal of this coursework is to generate reports with PROC REPORT;
 
 /*1. Create a detailed report based on the learn_modalities data set in the course folder.
 a. In the PROC REPORT step, use the OBS= data set option to display only the first 50 observations. 
