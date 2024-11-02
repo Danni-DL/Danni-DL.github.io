@@ -1,4 +1,4 @@
-*The goal of this coursework is to to use PROC MEANS to calculate simple statistics on numeric variables and to use PROC UNIVARIATE to calculate statistics and generate plots
+*The goal of this coursework is to to use PROC MEANS to calculate simple statistics on numeric variables and to use PROC UNIVARIATE to calculate statistics and generate plots;
 
 /*1. Run a PROC MEANS step on the Using primary_biliary_cirrhosis data set in the course data folder. 
 a. Request six statistics to be printed, that do not include n, mean, min, or max.
