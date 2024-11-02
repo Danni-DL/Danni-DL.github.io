@@ -1,0 +1,96 @@
+*The goal of this lab is to apply SAS-supplied formats, create user-defined formats and create new variables through the use of formats;
+
+/*1. Use PROC FORMAT to create a format for a numeric variable.
+a. The values should be zero (0) and one (1).
+b. The corresponding labels should be No for zero and Yes for one.*/
+title 'Q1 creating format1';
+proc format ;
+    value yesno 0='No'  1='Yes';
+run;    
+
+
+/*2. Use PROC FORMAT to create a format for a numeric variable.
+a. In the PROC FORMAT statement apply the option that prints information about informats or formats in the catalog.
+b. The values should be one through five.
+c. The corresponding labels are marital values (respectively): Single, Married, Spearated, Divorced, Widowed.*/
+title 'Q2 creating format2';
+proc format fmtlib;
+    value marriage
+          1='Single' 2='Married' 3='Seperated' 4='Divorved' 5='Widowed';
+run;
+
+/*3. Create a stacked vertical bar graph using SGPLOT and the course.depression data set. 
+a. Use the marital status variable as the categorical variable.
+b. Use the acute illness value as the group variable.
+c. Apply the formats created #1 and #2 to the appropriate variable. 
+d. Display a label inside of each segment of the bar. The label shows the frequency count for that segment.
+e. Use a KEYLEGEND statement to control the legend.
+i. Place the legend inside of the graph in the top right corner, with one column of names. 
+ii. Use the TITLE= option with the value of Response. */
+title 'Q3 creating a vertical bar graph';
+proc sgplot data=course.depression ;
+    vbar marital / group=acuteillness seglabel;
+    format marital marriage. acuteillness yesno.;
+
+    KEYLEGEND / position=topright location=inside across=1 title='response';
+run;
+
+/*4. The overall purpose of this task is to calculate the difference in days between multiple dates in the dm data set. The dm data set stores date values in character variables, which is problematic for determining differences. 
+a. Create a temporary version of the dm data set. 
+b. Create a numeric version of the date/time of informed consent variable using the INPUT function and the informat yymmdd10..
+c. Create a numeric version of the date/time of first study treatment variable using the INPUT function and the informat yymmdd10..
+d. Create a numeric version of the date/time of last study treatment variable using the INPUT function and the informat yymmdd10..
+e. Calculate the number of days between numeric informed consent variable and the numeric first study treatment. HINT: first minus informed
+f. Calculate the number of days between the numeric last study treatment variable and the numeric first study treatment. HINT: last minus first*/
+title 'Q4 creating new datasest dmtem';
+data dmtem;
+    set course.dm;
+    inform=input(rficdtc,yymmdd10.);
+    first=input(rfxstdtc,yymmdd10.);
+    last=input(rfxendtc,yymmdd10.);
+    days1=first-inform;
+    days2=last-first;
+    
+run;
+
+/*5. Run a PROC MEANS on the data set created in #4.
+a. Classify the results by sex and race.
+b. Specify the variables from #4e and #4f as the analysis variables. */
+title 'Q5 calculation on dataset dmtem';
+proc means data=dmtem;
+    class sex race;
+    var days1 days2;
+
+run;
+
+/*6. Run a PROC FREQ on the primary biliary cirrhosis data set in the course data folder.
+a. Suppress the printed output.
+b. Request the combination of drug and status.
+c. Request an output data set.*/
+title 'Q6 creating tables on drug and status';
+proc freq data=course.primary_biliary_cirrhosis noprint;
+    tables drug*status / out=drugsta;
+
+run;
+
+/*7. Use a DATA step on the data set created in #6.
+a. Use a LENGTH statement to create a character variable with a length of 15. 
+b. Use the PUT function to create the new variable, whose value contains the percent calculated by PROC FREQ.
+i. The character value should contain a percent sign and two decimal places. 
+c. Apply a label to the new variable.*/
+title 'Q7 creating a new dataset drug2';
+data drug2;
+    set drugsta;
+    length per $15;
+    per=put(percent/100,percent8.2);
+    label per='percent by drug and status';
+    
+run;
+
+/*8. Print the first ten observations from the data set created in #7.
+a. Show only the drug, status, and the new character variable.
+b. Be sure to display the labels of the variables.*/
+title 'Q8 printing of drug2 dataset';
+proc print data=drug2 label;
+    var drug status per;
+run;
