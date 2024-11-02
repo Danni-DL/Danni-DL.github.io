@@ -1,0 +1,120 @@
+*The goal of this lab is to combine datasets with SET and MERGE statement;
+
+/*1. Create a permanent data set named aedm. 
+  a. Merge the dm and ae data sets in the course folder by the subject id variable. 
+  The resulting data set should contain 1317 observations and 23 variables.*/
+title 'Q1 dataset creation with dm and ae datasets';
+proc sort data=course.dm out=dm; by usubjid;
+proc sort data=course.ae out=ae; by usubjid;
+run;
+
+data bios511.aedm;
+    merge dm ae;
+    by usubjid;
+    
+run;
+
+/*2. Run a PROC CONTENTS step on the data set created in #1.
+  a. Exclude the engine/host information and the variable list.*/
+title 'Q2 contents of aedm dataset';
+proc CONTENTS data=bios511.aedm;
+ods exclude enginehost;
+run;
+
+/*3. Create a temporary data set. 
+  a. Merge the dm and ae data sets in the course data folder by the subject id variable. 
+     i. Subset to the subjects that do not have an adverse event. HINT: Subjects only in the dm data set.
+     ii. Keep only the subject id, gender, and age variables.
+  The resulting data set should contain 140 observations and 3 variables.*/
+title 'Q3 dataset creation with subset of dm and ae datasets';
+data dmae_tem;
+    merge dm(in=indm) ae(in=inae);
+    by usubjid;
+    if indm=1 and inae=0;
+    keep usubjid sex age;
+    
+run;
+    
+/*4. Print the first ten participants of the data set created in #3.*/
+title 'Q4 prensentation of the 1st 10 obs in dmae_tem dataset';
+proc print data=dmae_tem(obs=10);
+run;
+
+/*5. Create a permanent data set named aedm2.
+  a. Merge the dm and ae data sets in the course data folder by the subject id variable. 
+     i. Subset to the subjects that do have an adverse event. HINT: Subjects in both data set.
+  The resulting data set should contain 1177 observations and 23 variables.*/
+title 'Q5 another dataset creation with dm and ae datasets';
+data bios511.aedm2 ;
+    merge dm(in=indm) ae(in=inae);
+    by usubjid;
+    if indm=1 and inae=1;
+run; 
+
+/*6. Using the data set from #5, display the count of adverse events using PROC FREQ.
+  a. In a single TABLES statement cross arm, sex, and severity. */
+title 'Q6 dislpay of aedm2 dataset';  
+  
+proc freq data=bios511.aedm2 ;
+    tables arm*sex*aesev;
+    
+run;
+   
+/*7. The objective of this task is to create a temporary data set that contains the variables USUBJID, VISITNUM, VISIT, DIABP, and SYSBP. 
+  The USUBJID, VISITNUM, and VISIT variables exist in the vs data set. The DIABP and SYSBP variables will need to be created. The final data set will contain one observation per visit per subject.*/
+
+/*a. Create one data set with the observations for diastolic blood pressure. Create one data set with the observations for systolic blood pressure. 
+  b. Create a temporary data set by merging the data sets created in #7a. Use USUBJID and VISITNUM/VISIT as the BY variables (USUBJID is insufficient to create a one-to-one match merge).
+  The final resulting data set should contain 3612 observations and 5 variables.*/
+title 'Q7 dataset creation with vs dataset';
+data diabp sysbp;
+    set course.vs;
+    if vstest='Diastolic Blood Pressure' then output diabp;
+    else if vstest='Systolic Blood Pressure' then output sysbp;
+run;
+
+proc sort data=diabp; by usubjid visitnum; run; 
+proc sort data=sysbp; by usubjid visitnum; run;
+run;
+
+data vsbp;
+    merge diabp(rename=(vsstresn=DIABP)) sysbp(rename=(vsstresn=SYSBP));
+    by usubjid visitnum;
+    keep USUBJID VISITNUM VISIT DIABP SYSBP;
+
+run;
+
+data vsbp;
+    retain USUBJID VISITNUM VISIT DIABP SYSBP;
+    set vsbp;
+run;
+    
+/*8. Print the observations for subject ECHO-012-019 in the data set created in #7b.*/
+title 'Q8 data presentation of vsbp dataset';
+proc print data=vsbp;
+    where usubjid='ECHO-012-019';
+run;
+
+/*9. The goal of this task is to create the same data set as #7b using one DATA step.
+  a. Merge the vs data set with itself (use vs twice on the MERGE statement). Use the WHERE= dataset option to subset observations as we merge two different sets of observations from the VS dataset. HINT: The RENAME option is your friend.
+     The final resulting data set should contain 3612 observations and 5 variables.*/
+title 'Q9 dataset creation using vs dataset twice';
+proc sort data=course.vs out=vs; by usubjid visitnum; run; 
+data friends;
+    merge vs(where=(vstest='Diastolic Blood Pressure') rename=(vsstresn=DIABP)) 
+          vs(where=(vstest='Systolic Blood Pressure') rename=(vsstresn=SYSBP));
+    by usubjid visitnum;    
+    keep USUBJID VISITNUM VISIT DIABP SYSBP;
+run;
+
+data friends;
+    retain USUBJID VISITNUM VISIT DIABP SYSBP;
+    set friends;
+run;
+
+/*10. Run a PROC CONTENTS step on the data set created in #9a.
+   a. Exclude the engine/host information.*/
+title 'Q10 data contents of firends dataset';
+proc contents data=friends;
+ods exclude enginehost;
+run;    
