@@ -1,4 +1,4 @@
-*This is a coursework from sas programming and the goal is to use PROC PRINT to view data and to use PROC FREQ to obtain counts, frequencies, and statistics
+*This is a coursework from sas programming and the goal is to use PROC PRINT to view data and to use PROC FREQ to obtain counts, frequencies, and statistics;
 
 /*1. Run PROC PRINT on the data in the sashelp.failure data set.
 a. Use the cause variable as the BY variable. This will require creating a temporary sorted data set prior to the PROC PRINT step.
