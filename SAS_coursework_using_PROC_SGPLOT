@@ -1,4 +1,4 @@
-*The goal of this coursework is to generate multiple plot types using PROC SGPLOT.
+*The goal of this coursework is to generate multiple plot types using PROC SGPLOT;
 
 /*1. With PROC SGPLOT, create a horizontal bar chart using the depression data set in the course data folder.
   a. Use the education variable as the category variable.
