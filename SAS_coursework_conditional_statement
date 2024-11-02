@@ -1,0 +1,76 @@
+*The goal of this lab is to Conditionally execute statements and applying values;
+
+/*1. Create a temporary data set by merging the ae and dm data sets in the course folder.
+a. Assign a numeric indicator variable, with values of 0 and 1, indicating if the subject had an adverse event or not. A 1 indicates the subject had an event.
+b. Create a character categorical variable, based on the serious adverse event variable, severity, and outcome variables using the table below.
+c. Assign a label to the new variables.
+The resulting data set should contain 1317 observations and 25 variables.*/
+title 'Q1';
+proc sort data=course.ae out=ae; by usubjid; run;
+proc sort data=course.dm out=dm; by usubjid; run; 
+title 'Q1 merge on dm and ae using if then statement';    
+data aedm;
+    merge ae(in=inae) dm(in=indm);
+    by usubjid;
+    if inae=1 and indm=0 then recover=1;
+    else recover=0;
+    length aetype $20;
+    if aeser='Y' and aesev='SEVERE' and 
+    (aeout='NOT RECOVERED/NOT RESOLVED' or aeout='RECOVERING/RESOLVING') then aetype='Very Bad';
+    else if aeser='Y' and aesev ^= 'SEVERE' then aetype='Bad';
+    else if aeser='N' and aesev='SEVERE' and 
+    (aeout='NOT RECOVERED/NOT RESOLVED' or aeout='RECOVERING/RESOLVING') then aetype='Not Good';
+    else if aeser='N' and aesev^='SEVERE' then aetype='Acceptable';
+    else if aeser='' then aetype='N/A';
+    
+    label aetype='catorgory of severity';
+run;
+
+
+/*
+2. Use a PROC FREQ to check your results for the variable created in #1a. You should have 
+counts for all five categories.*/
+title 'Q2 check results on aedm dataset';
+proc freq data=aedm;
+    tables aetype;
+    
+run;
+
+/*3. Create a temporary version of the employee_donations data set in the course folder.
+a. Use the SUM function to get a total donation for the year for each observation.
+b. Use the addition operator (+) to get a total donation for the year for each observation. HINT: Look at the note under the arithmetic operators table.
+c. Calculate the difference between the variable from #a and #b. 
+The resulting data set should contain 124 observations and 10 variables.*/
+title 'Q5 donation dataset';
+data donation;
+    set course.employee_donations;
+    total1=sum(of qtr1-qtr4);
+    total2=qtr1+qtr2+qtr3+qtr4;
+    dif=total1-total2;
+run;
+
+/*4. Use PROC MEANS to verify that all values of the difference variable from #3c are zero. 
+Request the MIN, MAX, MEAN, SUM, and NMISS statistics. */
+title 'Q6 compare both varibales on donation dataset';
+proc means data=donation MIN MAX MEAN SUM NMISS;
+    var dif;
+run;
+
+/*5. Create a temporary version of the learn_modalities data set in the course folder.
+a. Using the DATEPART function, create a new variable to hold the date value of the 
+variable called week in the data set.
+b. Use a subsetting IF statement to subset to date values on or after January 1, 2021.
+The resulting data set should contain 244905 observations and 10 variables.*/
+title 'Q7 edition on modalities dataset';
+data modality;
+    set course.learn_modalities;
+    newweek=datepart(week);
+    if newweek >= '01Jan2021'd;
+run;
+
+/*6. Run a PROC FREQ on the data set created in #5.
+a. Get counts for the learning modality.*/
+title 'Q8 counts on learning modality variables';
+proc freq data=modality;
+    tables learning_modality;
+run;
