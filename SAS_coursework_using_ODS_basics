@@ -1,4 +1,4 @@
-*The goal of this coursework is to use ODS SELECT and ODS EXCLUDE statements to limit printed results, to create data sets with the ODS OUTPUT statement and to apply style changes through the STYLE= option.
+*The goal of this coursework is to use ODS SELECT and ODS EXCLUDE statements to limit printed results, to create data sets with the ODS OUTPUT statement and to apply style changes through the STYLE= option;
 
 /*1. Create an rtf file that contains the following:*/
 ods RTF file='/home/u63982448/Bios511/Output/lab8_730786654.rtf' startpage=no;
