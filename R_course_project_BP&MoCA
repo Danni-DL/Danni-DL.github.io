@@ -1,0 +1,110 @@
+# coursework project__Investigation of Blood Pressure (BP) and Montreal Cognitive Assessment (MoCA) Scores
+
+mid <- read.csv("midterm2024.csv",header=TRUE)
+head(mid)
+library(dplyr)
+#a***********************************************************************************
+summary(mid$age)
+mid %>% filter(age<0)
+
+table(mid$sex)
+
+mid %>% filter(sbp_baseline<100 | sbp_baseline>220)
+mid %>% filter(sbp_v2<100 | sbp_v2>220)
+
+#b*********************************************************************************
+mid_new <- mid %>% filter( ! id %in% c(17, 23, 39, 44))
+
+age<-mid_new$age
+sex<-mid_new$sex
+sbp_base<-mid_new$sbp_baseline
+sbp_v2<-mid_new$sbp_v2
+moca_v1<-mid_new$moca_v1
+
+qqnorm(sbp_base,main="QQ plot for baseline sbp")
+qqline(sbp_base)
+
+#c**********************************************************************************
+mid_new <- mid_new %>%
+  mutate(age_cat= case_when(age <= 65 ~ 'young',
+                            age > 65 ~ 'old',
+                            ))
+older<-mid_new %>% filter(age_cat=='old')
+mean(older$sbp_baseline)
+sd(older$sbp_baseline)
+younger<-mid_new %>% filter(age_cat=='young')
+mean(younger$sbp_baseline)
+sd(younger$sbp_baseline)
+
+
+boxplot(sbp_base ~ age_cat, 
+        data = mid_new,  
+        col = "pink",
+        xlab="",
+        ylab="SBP baseline",
+        main="boxplot comparison of SBP baseline for both age groups") 
+
+#d*********************************************************************************
+
+t.test(sbp_base ~ age_cat, data = mid_new, var.equal = FALSE, conf.level = 0.95)
+
+#e************************************************************************************
+
+qqnorm(moca_v1,main="QQ plot for baseline MOCA")
+qqline(moca_v1)
+
+x<-sort(moca_v1)
+n <- length(x)
+xmed <- median(x) 
+xmed
+q<-0.5
+margin<-1.96*sqrt(n*q*(1-q))
+low <- n*q - margin
+lownum<-floor(low)
+low_<-x[lownum]
+low_
+high <- n*q + margin
+highnum<-ceiling(high)
+high_<-x[highnum]
+high_
+
+
+xbar <- mean(moca_v1) 
+xbar
+#standard deviation
+s <- sd(moca_v1)
+#calculate confidence interval
+margin <- qt(0.975,df=n-1)*s/sqrt(n)
+low_moca <- xbar - margin
+low_moca
+high_moca <- xbar + margin
+high_moca
+
+#f*************************************************************************************
+mid_new$sbp_dif<-mid_new$sbp_v2-mid_new$sbp_baseline
+head(mid_new)
+sbp_dif<-mid_new$sbp_dif
+qqnorm(sbp_dif,main="QQ plot for difference of sbp")
+qqline(sbp_dif)
+
+t.test(sbp_dif)
+
+#g**********************************************************************************
+mid_new$sex_cat<-0
+mid_new$sex_cat[mid_new$sex=='F'] <- 1
+head(mid_new)
+model<-lm(sbp_dif~age+sex_cat+moca_v1, data = mid_new)
+#check assumptions
+qqnorm(residuals(model), main='QQ plot for residual of the model')
+qqline(residuals(model))
+plot(fitted(model), residuals(model),main='residual plot for fitted model')
+abline(h = 0, lty = 2)
+hist(residuals(model), col = "steelblue", main='histogram of residuals')
+#output of regression
+summary(model)
+
+#h***********************************************************************************
+
+data_h = data.frame(age=55,  sex_cat=1,  moca_v1=22)
+predict(model_2,data_h, interval="predict") 
+
