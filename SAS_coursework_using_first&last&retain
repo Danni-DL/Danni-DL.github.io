@@ -1,0 +1,119 @@
+/* The goal of the lab is to use first, last and retain.*/
+
+/*1. The goal of this task is to count the number of subjects who answered certain 
+statements within each combination of acute illness and treatment recommended. 
+The statements are:
+• I was bothered by things that usually do not bother me---statement 12
+• My sleep was restless---statement 15
+
+Using a DATA Step, create a data set based on the depression data set in the course 
+folder. 
+The final data set should contain only one observation for each acute illnesstreatment combination. 
+HINT: Use a PROC CONTENTS to determine the variable names for each statement. 
+a. Use a RETAIN statement to create and retain one variable for the total for each 
+statement.
+b. Calculate the number of subjects whose answer was greater than zero for each 
+combination of acute illness and treatment. HINT: The retained total variables 
+must be reset to 0 at the start of each treatment within acute illness.
+c. Keep only acute illness, treatment recommended, and the two total variables.
+d. Apply labels to the two total variables.
+The resulting data set should contain 4 observations and 4 variables.*/
+title 'Q1 counts creation using retain';
+proc sort data=course.depression out=dep; by acuteillness treatmentrecommended; run;
+
+data dep1;
+    set dep;
+    by acuteillness treatmentrecommended;
+    retain bother sleep 0;
+    if first.treatmentrecommended then do;  bother=0; sleep=0; end;
+    
+    if statement12 ^=0 then bother=bother+1;
+    if statement15 ^=0 then sleep=sleep+1;
+    
+    if last.treatmentrecommended then output;
+    keep acuteillness treatmentrecommended bother sleep;
+    label bother='I was bothered by things that usually do not bother me' 
+          sleep='My sleep was restless';
+run;
+
+
+/*2. Check your totals from #1. The values for #2a and #2b should be the same.
+a. Use a PROC PRINT to view the data set created in #1. Be sure to display the labels.
+b. Use a PROC FREQ on depression to count the statement answers within acute illness and treatment recommended. HINT: When checking the totals, remember that zeros were not counted.
+i. Use the LIST option.
+ii. Suppress the cumulative values. */
+title 'Q2 comparison of counts in different structure';
+proc print data=dep1 label;
+run;
+
+proc freq data=dep ; 
+tables acuteillness*treatmentrecommended*statement12/ list nocum;
+tables acuteillness*treatmentrecommended*statement15/ list nocum;
+run;
+
+
+/*3. Create a temporary version of the ae data set in the course folder.
+a. Standardize the value of the start date. The value of the start date does not always have a day, it might only contain a month and a year. In that situation, 
+the day of the month should be the first. Use:
+if length(aestdtc) = 7 then aestdtc = catx('-',aestdtc,'01');
+b. Use the same code to standardize the end date.
+c. Create a numeric version of the AE start and end dates. HINT: Use an INPUT statement, similar to what you did in Lab 14.
+d. Add your favorite date format to the numeric date variables.*/
+title 'Q3';
+data aetem;
+    set course.ae;
+
+    if length(aestdtc) = 7 then aestdtc = catx('day',aestdtc,'01');
+    if length(aeendtc) = 7 then aestdtc = catx('day',aeendtc,'01');
+    start=input(aestdtc,yymmdd10.);    
+    ends=input(aeendtc,yymmdd10.);    
+run;
+
+
+/*4. Sort the data set created in #3 by the subject and numeric start date.*/
+title 'Q4';
+proc sort data=aetem out=aesort; by usubjid start; run;
+
+
+/*5. The goal of this task is to identify the earliest adverse event for each subject. Merge the sorted data set from #4 with the dm data set in the course folder. 
+a. Keep only the subjects that have adverse events (the ones in the ae data set).
+b. Keep only the first adverse event for each subject. 
+HINT: You have already sorted the data set by the subject and the start date of each adverse event, so 
+use FIRST..
+c. Calculate the number of days to the first adverse event by subtracting the 
+date/time of the first study treatment (from dm data set) from the numeric AE 
+start date. You will have to convert date/time of the first study treatment(rfxstdtc) to 
+numeric.
+d. Apply a label to the variable created in #c.
+The resulting data set should contain 462 observations and 26 variables.*/
+title 'Q5';
+proc sort data=course.dm out=dmsort; by usubjid aestdtc; run;
+
+data adverse;
+    merge aesort(in=ae) dmsort(in=dm);
+    by usubjid;
+    if ae=1 and dm=1;
+
+    if first.usubjid=1;
+    fir_trea=input(rfxstdtc,yymmdd10.);
+    days=start-fir_trea; 
+    label days='the number of days to the first adverse event';
+run;    
+
+/*6. Use PROC SGPLOT to generate histograms for the number of days to the first adverse event in the data set created in #5. 
+a. Generate one histogram for each arm. 
+b. Overlay a density plot with a normal distribution.
+c. Overlay a density plot with a kernel distribution. 
+d. Apply a label to the arm variable. (The current label is long, make it shorter.) 
+e. Use a KEYLEGEND statement to place the legend inside the axis area on the right side.*/
+title 'Q6';
+proc sort data=adverse out=hist; by arm; run;
+
+proc sgplot data=hist;
+    by arm ;
+    histogram days;
+    density days / type=normal;
+    density days /type=kernel;
+    label arm='placebo or treatment';
+    keylegend / position=right location=inside;
+run;     
