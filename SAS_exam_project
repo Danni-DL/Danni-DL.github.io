@@ -1,0 +1,298 @@
+/* This is the project for final exam of SAS including vaarious data steps, procs and macro programs.*/
+
+/*1. The goal of this task is to import the Monekypox_Research.csv file in the course 
+data folder using PROC IMPORT. (Be sure to use the correct capitalization of the file 
+name, otherwise PROC IMPORT will produce an error.)
+a. In the PROC IMPORT statement specify the DBMS option with a value of csv.
+b. Use a GETNAMES statement, supply a value of yes.
+The resulting data set should contain 71 observations and 5 variables.*/
+
+title 'Q1 import the Monkeypox_Research.csv file';
+filename monkey '/home/u63982448/my_shared_file_links/u49231441/Data/Monkeypox_Research.csv' ;
+proc import datafile=monkey out=bios511.monkey dbms=csv;
+    getnames=yes;
+run;
+
+
+/*2. Create a format for the topic value in the monkeypox research data.
+a. Write a PROC FORMAT step for the possible values of topic.
+1 is Vaccine
+2 is Therapeutic
+3 is Diagnostic
+4 is Lab Safety
+5 is Epidemiology
+6 is Education
+7 is Outreach
+Otherwise it is Unknown*/
+
+title 'Q2 format creation of topic';
+proc format;
+    value topic
+    1 = 'Vaccine'
+    2 = 'Therapeutic'
+    3 = 'Diagnostic'
+    4 = 'Lab Safety'
+    5 = 'Epidemiology'
+    6 = 'Education'
+    7 = 'Outreach';
+run;
+
+/*3. The goal of this task is to view the distribution of the research topic.
+a. Suppress the printing of the procedure title.
+b. Run a PROC FREQ on the data set created in #1 with the combination of agency
+and topic.
+c. Use the MISSING option to ensure table contains a row for any missing values.
+d. Use the LIST option to condense the resulting table.
+e. Apply the format created in #2 to the topic variable.*/
+
+title 'Q3 distribution viewing of monkey dataset';
+ods noproctitle;
+proc freq data=bios511.monkey;
+    tables agency*topic / missing list;
+    format topic topic.;
+run;
+
+/*4. The goal of this task is to calculate the ratio of the oil production and the ratio of gas 
+production from the first extraction to the last extraction for each protraction name. 
+The final data set should contain only one observation for each protraction name. 
+a. First, sort sashelp.gulfoil by protraction name and date. 
+b. Using DATA Step, create a data set based on the sorted data set.
+c. Use a RETAIN statement to create a variable to hold the first oil value and a 
+variable to hold the first gas value. 
+d. The values for the variables created in #c should be set to the oil and gas 
+variables, respectively, from the first date of extraction for each protraction name.
+e. Create variables containing the last oil and gas extraction values from the first 
+date of extraction for each protraction name.
+f. Calculate the ratios (first over last) for protraction name. Be sure to prevent 
+notes in the log about division by zero.
+g. Format the ratio variables to have four decimal places.
+h. Format the first oil and gas and last oil and gas variables to use commas.
+i. Keep only protraction name, first oil and gas, last oil and gas, and ratio variables.
+j. Assign meaningful labels to each of the variables being kept.
+The resulting data set should contain 31 observations and 7 variables.*/
+
+title 'Q4 dataset creation of foil';
+proc sort data=sashelp.gulfoil out=gulfoil; by protractionname date; run;
+data foil;
+    set gulfoil;
+    by protractionname date;
+    retain first_oil first_gas last_oil last_gas;
+    if first.protractionname=1 then do; 
+    first_oil=oil;
+    first_gas=gas; end;
+    if last.protractionname=1 then do; 
+    last_oil=oil;
+    last_gas=gas; end;
+    if last.protractionname;
+
+    if last_oil ne 0 then oil_ratio=first_oil/last_oil;
+    if last_gas ne 0 then gas_ratio=first_gas/last_gas;
+
+    format oil_ratio gas_ratio 6.4;
+    format first_oil first_gas last_oil last_gas comma12.;
+    keep protractionname first_oil first_gas last_oil last_gas oil_ratio gas_ratio;
+    label protractionname='protraction names' 
+          first_oil='first oil extraction' 
+          first_gas='first gas extraction' 
+          last_oil='last oil extraction' 
+          last_gas='last gas extraction' 
+          oil_ratio='ratio of first and last oil' 
+          gas_ratio='ratio of first and last gas';
+run;
+
+/*5. Use a PROC PRINT to view the data set created in #4, including the labels.*/
+
+title 'Q5 printing of foil dataset';
+proc print data=foil label; run;
+
+
+/*6. Use PROC SGPLOT to generate horizontal box plot for glyb variable in the diabetes
+data set in the course folder. 
+a. Write a footnote.
+b. Use gender as the category variable.
+c. Use frame as the group variable.
+d. Apply the label of Gender to the gender variable and Body Frame to the frame 
+variable. */
+
+title 'Q6 horizontal box plot in diabetes dataset';
+proc sgplot data=course.diabetes;
+    hbox glyhb / category=gender group=frame; 
+    footnote 'horizontal box plot';
+    label gender='the label of Gender' frame='Body Frame';
+run;
+
+/*7. Clear the footnote that was created as part of #7.*/
+
+title 'Q7 footnote clearance';
+footnote '' ;
+
+
+/*8. Create a format for the topic value in the monkeypox research data.
+a. Write a PROC FORMAT step for values of sex.
+1 is Male
+0 is Female*/
+
+title 'Q8 format creation of sex';
+proc format;
+    value sex
+    1 = 'Male'
+    0 = 'Female';
+run;
+
+/*9. Run a PROC MEANS on the preemies data set in the course folder.
+a. Suppress the printed output.
+b. Use the option that limits the output statistics to the class variable values 
+without including the grand total.
+c. Use a FORMAT statement to apply the format you created in #8 to the sex 
+variable.
+d. Use the sex variable in a CLASS statement.
+e. Use bw as the analysis variable. 
+f. Create an output data set.
+i. Request the mean statistic. */
+
+title 'Q9 statistics of dataset preemies';
+proc means data=course.preemies noprint nway;
+    
+    format sex sex.;
+    class sex;
+    var bw;
+    output out=preemie mean= /autoname;
+run;
+
+/*10. Use PROC TRANSPOSE on the data set created in #9. 
+a. Drop the automatic variable _name_.
+b. Use an ID statement to create variables representing each sex.
+c. The value contained in these new variables should contain the value from the bw
+variable.
+The resulting data set should contain 1 observation and 2 variables.*/
+
+title 'Q10 dataset transposing of preemies';
+proc transpose data=preemie out=preemie2(drop=_name_);
+    id sex;
+    var bw_mean;
+run;
+
+/*11. Use a PROC PRINT on the data set created in #10.
+a. Suppress the observation number column.*/
+
+title 'Q11 priniting of preemies dataset';
+proc print data=preemie2 noobs; run;
+
+
+/*12. The goal of this task is to combine the customer information data with their order 
+history data. Merge the customer_dim and order_fact data sets in the course 
+data set by customer id. Keep only the customer id values that are in both data sets.
+The resulting data set should contain 617 observations and 22 variables.*/
+
+title 'Q12 combining of dataset of customer';
+proc sort data=course.customer_dim out=dim; by customer_id; run;
+proc sort data=course.order_fact out=order; by customer_id; run;
+data customer;
+    merge dim(in=ind) order(in=ino);
+    by customer_id;
+    if ind=1 and ino=1;
+run;
+
+/*13. Write a macro program that contains the following:
+a. Macro parameters for: country, minimum value
+b. A data step that 
+i. Creates a data set named the country macro parameter.
+ii. Subsets the data set created in #12 to only the observations that have a 
+customer country value of the country macro parameter.
+iii. Creates a flag variable that has a value of one if the total retail price is 
+greater than the minimum value macro parameter and a value of zero 
+otherwise.
+iv. Calculate the number of days between the order date and the delivery 
+date. 
+c. A PROC REPORT on the data set from #13b.
+i. A TITLE that contains the value of the country macro parameter.
+ii. Include a column for the flag variable (#13biii), number of days (#13biv), 
+quantity, and total retail price.
+iii. Apply the GROUP usage to flag and number of days.
+iv. Request the mean statistic for total retail price.
+v. Use the following column headers:
+Flag --> Minimum Value
+Number of days --> Days to Delivery
+Total retail price --> Mean Price*/
+
+title 'Q13 creation of macro program';
+%macro countries(country=, min_value=);
+data country_macro_parameter;
+    set customer;
+    where customer_country=&country.;
+    if total_retail_price>=&min_value. then flag=1; else flag=0;
+    days=delivery_date-order_date;
+run;
+
+proc report data=country_macro_parameter;
+    title "report of mean price in &country.";
+    column flag days quantity total_retail_price ;
+    define flag / group 'Minimum Value';
+    define days / group 'Days to delivery' ;
+    define total_retail_price / mean 'Mean Price' ;
+run;    
+%mend countries;    
+
+/*14. Execute the macro program created in #13 using the following:
+a. Country parameter --> DE
+Minimum value parameter --> 75
+b. Country parameter --> AU
+Minimum value parameter --> 200
+c. Country parameter --> IL
+Minimum value parameter --> 150*/
+
+title 'Q14 execute of macro program';
+%countries(country='DE',min_value=75)
+%countries(country='AU',min_value=200)
+%countries(country='IL',min_value=150)
+
+;
+
+/*15. The goal of this task is to create a temporary data based on the sashelp.fish data 
+set and manipulate the data. 
+a. Using an array and DO loop, change the values of the three length variables to be 
+95% of their original value. Prevent any notes in the log regarding operations on 
+missing values.
+b. Create a categorical variable based on the height variable.
+Height value Categorical variable value
+c. Create a categorical variable based on the weight variable.
+The resulting data set should contain 159 observations and 10 variables.*/
+
+title 'Q15 dataset creation of fishtem';
+data fishtem;
+    set sashelp.fish;
+    array lengt{3} length1 length2 length3;
+    do i=1 to 3;
+    if not missing(lengt{i}) then lengt{i}=lengt{i}*0.95;end;
+    
+    if height<=4.5 then height_cat='H1';
+    else if 4.5<height<=9 then height_cat='H2';
+    else if 9<height<=13.5 then height_cat='H3';
+    else if 13.5<height then height_cat='H4';
+    else height_cat='M';
+    
+    if weight<=412.5 then weight_cat='W1';
+    else if 412.5<weight<=825 then weight_cat='W2';
+    else if 825<weight<=1237.5 then weight_cat='W3';
+    else if 1237.5<weight then weight_cat='W4';
+    else weight_cat='M';
+run;
+
+
+/*16. Run a PROC UNIVARIATE on the data set created in #15.
+a. Print only the Moment and Extreme Observations tables.
+b. Subset to the H3 height category values.
+c. Use species in the BY statement.
+d. Use the weight category variable created in #15 in the CLASS statement.
+e. Use the three length variables in the VAR statement.*/
+
+title 'Q16 printing of fish_sort';
+proc sort data=fishtem out=fish_sort; by species; run;
+
+ods select moments extremeobs;
+proc univariate data=fish_sort;
+where height_cat='H3';
+by species;
+class weight_cat;
+var length1 length2 length3;
+run;
