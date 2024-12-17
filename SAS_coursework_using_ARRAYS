@@ -1,0 +1,117 @@
+/*The goal of the sas lab is to conduct array statement in data step*/
+
+/*1. Create a new temporary data set based on the prices data set in the course folder.
+a. Use an array to calculate the profit at each of the 15 numbered price points.
+i. Create a new variable for each profit. Profit is revenue minus discount. 
+b. Apply the dollar format with two decimal places to the profit variables. 
+c. Keep only the profit variables.
+The resulting data set should contain 1000 observations and 15 variables.*/
+title 'Q1 dataset creation based on price';
+data revenue;
+    set course.prices;
+    array price{15} price1-price15;
+    array profit{15} profit1-profit15;
+    do i=1 to dim(price);
+        profit{i}=price{i}-discount;
+    end;
+    format profit1-profit15 dollar10.2;
+    keep profit1-profit15;
+run;
+
+/*2. The goal of this task is to determine which of the profit values is the highest among the 
+15 and to create a variable that contains the variable name of that particular profit. The 
+strategy is to assign an initial value to a “hold” variable. Then compare each profit value 
+to the “hold” variable. If the profit is greater than the hold variable, the value of the 
+hold variable is reassigned, as is the character variable containing the name of the profit 
+variable. 
+a. Use the data set generated in #1.
+b. Define the length of a character variable that will hold the name of the profit 
+variable with the highest value.
+c. Use the code below as a template:*/
+title 'Q2 profit determination';
+data revenue;
+    set revenue;
+    num=0;
+    length highest $8;
+    array profit{15} profit1-profit15;
+    do i=1 to dim(profit);
+        if num<profit{i} then do;
+            num=profit{i};
+            highest=cats('profit',put(i,8.));
+        end;
+    drop i num;    
+    end;
+run;
+
+/*3. Run a PROC FREQ against the character variable created in #2 to see the distribution of highest price point.*/
+title 'Q3 distribution of the highest price';
+proc freq data=revenue;
+    tables highest;
+run;
+
+/*4. The sashelp.birthwgt contains six Yes/No variables. In a temporary data set, 
+using arrays, create numeric 1/0 variables for each one, where 1 represents Yes and 0 
+represents all other values. You will need to use a new variable name because the same 
+name cannot be used for both a character and a numeric variable.
+The resulting data set should contain 100000 observations and 14 variables.*/
+title 'Q4 dataset creation of birth';
+data birth;
+    set sashelp.birthwgt;
+    array yesno{6} lowbirthwgt married drinking--somecollege;
+    array onezero{6} ;
+    do i=1 to dim(yesno);
+        if yesno{i}='Yes' then onezero{i}=1;
+        else onezero{i}=0;
+    end;
+    drop i;
+run;
+
+/*5. Generate Chi-square statics for the numeric versions of the low birth weight and 
+drinking variables created in #4. HINT: PROC FREQ
+a. Generate the statistics by race.
+b. Suppress the procedure title.
+c. In the output, show only the Chi-square tables.*/
+title 'Q5 chi square statistics';
+proc sort data=birth; by race; run;
+
+ods noproctitle;
+proc freq data=birth;
+    tables onezero1*onezero3 / chisq;
+    by race;
+    label onezero1='low birth weight' onezero3='drinking';
+ods select ChiSq;
+run;
+
+
+/*6. Create a new data set based on the sashelp.heart data set.
+a. Using an array, change the values of all of the character variables to be all upper case.
+b. Add 3% to all of the numeric variables. Prevent any notes in the log regarding operations on missing values.
+c. Use an IF statement to subset to the observations of males who are dead and their new weight is greater than 190.
+d. Drop the iterator variables. 
+The resulting data set should contain 275 observations and 17 variables.*/
+title 'Q6 dataset creation on heart';
+
+data overweight_m;
+    set sashelp.heart;
+    array char{*} $  _character_;
+    array numer{*} _NUMERIC_;
+    do i=1 to dim(char);
+        char{i}=upcase(char{i});
+    end;    
+    do j=1 to dim(numer);
+        if numer{j}^=. then do;
+        numer{j}=1.03*(numer{j});
+    end;end;
+
+    if sex='MALE' and status='DEAD' and weight>=190; 
+*subset using if , no write things like then keep; 
+    drop i j;
+run;    
+
+
+/*7. Print the first ten observations of data set created in #6. 
+a. Include only the weight and blood pressure status variables.*/
+title 'Q7 printing of overweight dataset';
+proc print data=overweight_m(obs=10);
+    var weight bp_status;
+run;    
