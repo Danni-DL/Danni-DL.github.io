@@ -1,0 +1,92 @@
+/* The goal of the sas lab is to use proc transpose. */
+
+/*1. Using PROC TRANSPOSE, change the budget data set in the course data folder.
+a. Specify the region variable in the BY statement.
+b. Specify the department variable in the ID statement.
+c. Specify the yearly budget variables in the VAR statement. 
+d. Use the RENAME= data set option to change the name of the _name_ variable to 
+year. 
+The resulting data set should contain 15 observations and 6 variables.*/
+
+title 'Q1 dataset transpose using budget dataset';
+proc sort data=course.budget out=budget; by region; run;
+
+PROC TRANSPOSE data=budget name=year out=bud;
+    by region;
+    ID department;
+    var yr2016-yr2020;   
+run;    
+
+data bud;
+    retain region year A B C D ;
+    set bud;
+    run;
+    
+/*2. Print the region 3 observations of data set created in #1. */
+
+title 'Q2 dataset printing of bud on region 3';
+
+proc print data=bud;
+    where region=3;
+run;
+
+
+/*3. Using PROC TRANSPOSE, restructure the sashelp.stocks data set.
+a. Create a data set that has one observation for each date value.
+b. Use an ID statement to create variables representing each stock.
+c. The value contained in these new variables should contain the value from the 
+stock’s closing value from the original data set.
+d. Drop the automatic variable _name_.
+The resulting data set should contain 233 observations and 4 variables.*/
+
+title 'Q3 dataset transpose using stocks dataset';
+proc sort data=sashelp.stocks out=stocks; by date; run;
+
+PROC TRANSPOSE data=stocks out=days(drop=_name_);
+    by date;
+    ID stock;
+    var close;
+   
+run;    
+
+
+/*4. Create a series graph using PROC SGPLOT and the data set created in #3.
+a. Use date on the x axis.
+b. Use the Intel stock on the y axis.*/
+
+title 'Q4 series plot using days dataset';
+PROC SGPLOT data=days;
+    series x=date y=intel;
+run;
+
+/*5. Using a DATA step, restructure the budget data set in the course folder with one 
+record for each region-quarter-year combination. 
+a. Subset to the department B records.
+b. Create a variable to hold the year value.
+c. Create a variable to hold the budget values from yr2016-yr2020.
+d. Apply the format of dollar10. to the new budget variable.
+e. Keep only the region, quarter, year, and budget variables.
+f. Apply labels to the four variables that are being kept.
+The resulting data set should contain 15 observations and 4 variables.*/
+
+title 'Q5 dataset transpose using data step';
+data bud2;
+    set course.budget ;
+    where department='B';
+    array qtrs{5} yr2016-yr2020;
+    
+    do i=1 to 5;
+        year=2015+i; budget=qtrs{i}; output;end;
+    format budget dollar10.;
+    keep region qtr year budget ;
+    label region='budget region' qtr='budget quarter' year='budget year' budget='budget amount';
+run;   
+
+
+/*6. Run a PROC CONTENTS on the data set created in #5.
+a. Display only the variables table.*/
+
+title 'Q6 dataset content of bud2 dataset';
+PROC CONTENTS data=bud2;
+ods select Variables;
+run;
