@@ -1,5 +1,7 @@
 /* The goal of the sas lab is to use proc transpose. */
 
+/*section1*/
+
 /*1. Using PROC TRANSPOSE, change the budget data set in the course data folder.
 a. Specify the region variable in the BY statement.
 b. Specify the department variable in the ID statement.
@@ -89,4 +91,89 @@ a. Display only the variables table.*/
 title 'Q6 dataset content of bud2 dataset';
 PROC CONTENTS data=bud2;
 ods select Variables;
+run;
+
+
+/*section 2*/
+
+/*1. The goal of this task is to create this data set. (NOTE: The picture contains only part of 
+the data set. The order of your variables does not have to match what is below.)
+a. Using as many DATA steps as you need to create the above table based on the ae data set in the course folder. 
+b. New variables should be named for each severity level and their values should 
+   be the count from #a. Use the code below as inspiration.
+
+The resulting data set should contain 284 observations and 5 variables.*/
+
+title 'Q1 dataset creation using ae dataset';
+proc sort data=course.ae out=ae_sort; by aeterm aesoc aesev; run;
+data severity;
+set ae_sort;
+    by aeterm aesoc aesev;
+      array level{3} mild moderate severe;
+      array names{3} $ _temporary_ ('MILD' 'MODERATE' 'SEVERE');
+      retain mild moderate severe;
+      if first.aeterm then do i=1 to 3; level{i}=0; end;
+      do j=1 to 3; if aesev=names{j} then level{j}=level{j}+1 ; end;
+      
+   if last.aeterm;
+   keep aeterm aesoc mild moderate severe;
+run;
+
+
+/*2. Print the observations with an ae term of jaw tightness from the data set created in #2.*/
+
+title 'Q2 printing of dataset from Q1';
+proc print data=severity;
+    where aeterm='Jaw Tightness';
+run;
+
+/*3. The goal of this task is to restructure the lb data set in the course folder to look like this:
+(NOTE: Only part of the final data set is shown.)
+a. Use a DATA step with a RETAIN statement.
+b. Assign the lab result variable to new variables based on the lbtestcd variable. 
+c. Keep the usubjid id, visit, visit number, alb, ca, and hct variables. 
+The resulting data set should contain 2408 observations and 6 variables.*/
+
+title 'Q3 dataset restructure of lb';
+proc sort data=course.lb out=lb_sort; by usubjid visitnum lbtestcd; run;
+data test;
+    set lb_sort(keep=usubjid visitnum visit lbtestcd lbstresn);
+    by usubjid visitnum lbtestcd;
+    array week{4} $ _temporary_ ('Screening' 'Week 0' 'Week 16' 'Week 32') ; 
+    array type{3} $ _temporary_ ('ALB' 'CA' 'HCT');
+    array ach{3} alb ca hct;    
+    retain alb ca hct;
+    if first.visitnum then do i=1 to 3; ach{i}=.; end;
+
+    do k=1 to 3; if lbtestcd=type{k} then ach{k}=lbstresn; end;
+    
+    if last.visitnum; 
+    keep usubjid visitnum visit alb ca hct; 
+run;
+    
+
+
+/*4. Print the observations with usubjid of ECHO-016-008 from the data set created in #3.*/
+
+title 'Q4 dataset printing with usubjid of ECHO-016-008';
+proc print data=test;
+where usubjid='ECHO-016-008'; run;
+
+
+/*5. Create a data set based on the tumor1 data set in the course data folder.
+a. For every observation in the data set, add an observation with a treatment value of Z.
+The resulting data set should contain 1120 observations and 4 variables.*/
+
+title 'Q5 dataset creation using tumor1';
+data tumorz;
+    set course.tumor1 ; output;
+    trt='Z'; output;
+run;
+
+
+/*6. Use PROC FREQ to get the number of patients for each treatment crossed with gender.*/
+
+title 'Q6 # of patients for each treatment crossed with gender';
+proc freq data=tumorz;
+    tables trt*gender;
 run;
