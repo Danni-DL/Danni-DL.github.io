@@ -1,0 +1,117 @@
+/* The goal of the sas lab is to conduct proc import with infile and informat statement.*/
+
+/*1. This goal of this task is to import the country.dat file in the course folder using PROC IMPORT.
+a. Write a FILENAME statement that assigns a fileref with the country.dat file.
+b. In the PROC IMPORT statement specify the DBMS option with a value of dlm.
+c. In the PROC IMPORT statement specify the REPLACE option.
+d. Use a DELIMITER statement to assign ‘!’ as the delimiter. 
+e. Use a GETNAMES statement and supply a value of no.*/
+
+title 'Q1 import the country.dat file';
+filename country '/home/u63982448/my_shared_file_links/u49231441/Data/country.dat' ;
+proc import datafile=country out=newcon replace dbms=dlm;
+    delimiter='!';
+    getnames=no;
+run;
+
+/*2. With a DATA step, modify the data set created in #1.
+a. Assign informative variable names.
+b. Apply a label to the variables. 
+The resulting data set should contain 238 observations and 2 variables.*/
+
+title 'Q2 modify dataset of country';
+data country2;
+    set newcon(rename=(var1=abrev var2=whole));
+
+    label abrev='abreviation of the country name' whole='whole name of the country';
+run;
+
+/*3. The goal of this task is to read in the country.dat file in the course data folder using 
+a DATA step.
+a. In the INFILE statement use the DLM option. HINT: You already have a fileref 
+and you know what the delimiter is.
+b. Use a LENGTH statement to apply appropriate lengths to the variables.
+c. Apply a label to the variables. 
+The resulting data set should contain 238 observations and 2 variables.*/
+
+title 'Q3 read country.dat file using a DATA step';
+data country3;
+    length abrev $2 whole $30;
+    label abrev='abreviation of the country name' whole='whole name of the country' ;
+    infile country DLM='!';
+    input abrev whole;
+run;
+
+/*4. Run a PROC COMPARE between the data sets created in #2 and #3. It is ok if it shows 
+difference with informats. */
+
+title 'Q4 comparison of datasets';
+proc compare base=country2 compare=country3;
+run;
+
+/*5. Data like the country information from #1 and #3 are often used to create user-defined 
+formats. The analysis data sets often contain only a code value, while a separate file 
+contains the mappings from code to a useful value. The goal of this task is to create a 
+format from the variables in the data set. 
+a. Using the data set from #1:
+i. Create a new data set. 
+ii. Create a variable named start that holds the value of country code. 
+iii. Create a variable named label that contains the name of the country. 
+iv. Create a variable named fmtname and assign the value $cnty (yes, 
+include the $ as part of the value, meaning fmtname is a character 
+variable) on every observation. */
+
+title 'Q5a generate a format';
+data country4;
+    set newcon(rename=(var1=code var2=label));
+    length code $2 label $30  fmtname $40;
+    fmtname='$cnty';
+start=code;
+
+run;
+
+/*b. Use the following PROC FORMAT code to generate a format.*/
+
+title 'Q5b generate format';
+proc format cntlin=country4 lib=work 
+fmtlib;
+run;
+
+
+/*6. Create a data set, using DATALINES, that holds your class schedule.
+a. The data set should contain one observation for each section – meaning lecture 
+and lab are separate. Your class might meet more than once a week, create a 
+record for each day of the week. At a minimum your data set should contain 
+four records for BIOS 511.
+b. The data set should contain one variable for: class name, section type, building, 
+room, day of week, start time. 
+HINT: Use an informat in the INPUT statement to read in the time. 
+c. If you are so inclined, be creative. Is there any other pertinent information that 
+should be included as a variable?
+d. Add labels for all of the variables.
+e. Add a format for the start time variable.*/
+
+title 'Q6 creation of dataset class schedule';
+data class;
+    length name $7 type $10 building $10 weekday $30;
+    input name type building room weekday start date9. ;
+    format start mmddyy10.;   
+    label name='class name' type='section type' building='building' room='room' 
+          weekday='day of the week' start='start time';     
+    datalines;
+Bios511 lecture RHall 228 Monday&Wednesday 18Aug2024    
+Bios511 lab RHall 228 Monday&Wednesday 18Aug2024   
+Bios660 lecture MHall 2306 Tuesday$Thrusday 19Aug2024
+Bios662 lecture MHall 2306 Tuesday$Thrusday 19Aug2024
+;
+run;
+
+/*7. Print the data set created in #6. 
+a. The order of the observations should be: day of week, start time.
+b. Suppress the observation number.
+c. Print the labels.*/
+
+title 'Q7 printing of dataset of class schedule';
+proc print data=class noobs label ;
+    var weekday start name type building room ;
+run;
