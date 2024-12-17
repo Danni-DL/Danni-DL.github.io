@@ -1,0 +1,361 @@
+/* The goal of the sas lab is to conduct macro program and debuging.*/
+
+/*section1*/
+
+/*1. Create a macro variable to hold your PID. */
+
+%let pid=730786654;
+
+/*2. Create a macro variable that holds the path where you store your output files.*/
+
+%let path= /home/u63982448/Bios511/Output/;
+
+/*3. Use the macro variables created in #1 and #2 in your ODS PDF statement that creates
+your output file.*/
+
+ods pdf file="&path.lab23_&pid..pdf";
+
+/*4. Create a macro variable containing the text: BIOS 511 LAB 23 Macro Variables. Use this
+macro variable as the first title in all of the generated output.*/
+
+%let lecture=BIOS 511 LAB 23 Macro Variables;
+title1 "&lecture.";
+
+/*5. The goal of this task is to put the subject counts for frame type into macro variables.
+a. Run a PROC MEANS on the diabetes data set in the course folder.
+i. Suppress the printed results.
+ii. Use frame as a class variable.
+iii. Create an output data set. Request the n statistic as part of the
+statement.
+b. Use CALL SYMPUTX in a DATA _NULL_ step to create macro variables from the
+values in the data set created in #5a.
+i. Create a macro variable for each frame value that holds the count (n) for
+that frame.
+ii. A macro variable called tots will hold the count for all subjects.*/
+
+PROC MEANS data=course.diabetes noprint;
+	class frame;
+	output out=diab n=counts;
+run;
+
+data _null_;
+	set diab;
+	call symputx('tots', counts, 'g');
+run;
+
+/*6. Write the values of the macro variables created in #5b to the log.*/
+%put &tots.;
+
+/*7. Generate a vertical bar chart of the frequency of the frame variable in the diabetes
+data set.
+a. The graph should have two titles. The title from #4 and a second one containing
+the overall subject total.*/
+
+title2 "Q7 vertical bar chart of diabetes dataset of &tots. subject total";
+
+proc sgplot data=course.diabetes;
+	vbar frame;
+run;
+
+/*8. Programmatically (meaning you can’t use %LET) create a macro variable containing a list
+of the names of the character variables from the ae data set in the course folder. The
+variables should be listed in the order they appear in the data set. Use the code below
+as a template.
+*/
+
+proc contents data=course.ae out=ae_var(where=(type=2)) noprint;
+run;
+
+proc sort data=ae_var out=ae_var;
+	by varnum;
+run;
+
+data _null_;
+	set ae_var end=eof;
+	length namelist $300;
+	retain namelist;
+	namelist=catx(' ', namelist, name);
+
+	if eof=1 then
+		call symputx('chara_var', namelist, 'g');
+run;
+
+%put &chara_var.;
+
+/*9. Using the macro variable created in #8, an ARRAY statement, and a DO loop, change the
+values of the character variables in the ae data set to be all lowercase.*/
+
+data aetem;
+	set course.ae;
+	array vari{10} $ &chara_var.;
+
+	do i=1 to dim(vari);
+		vari{i}=lowcase(vari{i});
+	end;
+run;
+
+/*10. Print five observations from the data set created in #9.
+a. Suppress the observation number.
+b. Print only the character variables. HINT: use the macro variable.*/
+
+title2 'Q10 5 obs from aetem dataset';
+proc print data=aetem(obs=5) noobs;
+	var &chara_var.;
+run;
+
+/*11. Create a series of macro variables, vstest1 – vstestN. Each macro variable will hold the
+code name of one of the vital sign tests from the vs data set in the course folder.
+Create a second series of macro variables containing the corresponding full name of the
+test, vsname1 – vsnameN. Use the code below as a template.
+*/
+
+proc freq data=course.vs noprint;
+	tables vstest*vstestcd / out=testable;
+run;
+
+
+
+data _null_;
+	set testable;
+	length vstest1-vstest5 $20 vsname1-vsname5 $20;
+	array code{*} vstest1--vstest5;
+	array whole{*} vsname1--vsname5;
+	call symputx(cats('vstest', _n_) , vstestcd , 'g');
+	call symputx(cats('vsname', _n_) , vstest, 'g');
+run;
+
+%put &vstest1.;
+%put &vsname2.;
+
+/*12. Create a report, using PROC REPORT, based on the vs data set.
+a. In the second title, include the vsname1 value.
+b. Subset the table to show only records for the tests that match vstest1.
+c. Use the report-items: visit number, visit name, and result.
+d. The report should be ordered and consolidated by the visit number to ensure the
+visits appear in the order they took place. Do not include the visit number
+column in the final table. HINT: Remember there is an option in the DEFINE
+statement to suppress the printing of a column.
+e. Order and consolidate by visit name.
+f. Request the mean statistic for the vital sign result.
+g. Apply a shorter column header to the result.*/
+
+title2 "Q12 dataset report of vs with &vstest1.";
+
+proc report data=course.vs;
+	where vstestcd="&vstest1.";
+	column visitnum visit vsstresn;
+	define visitnum / group noprint;
+	define visit / group;
+	define vsstresn / mean 'vital sign result';
+run;
+
+/*13. Repeat #12 for each of the remaining vstest values.*/
+title2 "Q13 dataset report of vs with &vstest2.";
+
+proc report data=course.vs;
+	where vstestcd="&vstest2.";
+	column visitnum visit vsstresn;
+	define visitnum / group noprint;
+	define visit / group;
+	define vsstresn / mean 'vital sign result';
+run;
+
+title2 "Q13 dataset report of vs with &vstest3.";
+
+proc report data=course.vs;
+	where vstestcd="&vstest3.";
+	column visitnum visit vsstresn;
+	define visitnum / group noprint;
+	define visit / group;
+	define vsstresn / mean 'vital sign result';
+run;
+
+title2 "Q13 dataset report of vs with &vstest4.";
+
+proc report data=course.vs;
+	where vstestcd="&vstest4.";
+	column visitnum visit vsstresn;
+	define visitnum / group noprint;
+	define visit / group;
+	define vsstresn / mean 'vital sign result';
+run;
+
+title2 "Q13 dataset report of vs with &vstest5.";
+
+proc report data=course.vs;
+	where vstestcd="&vstest5.";
+	column visitnum visit vsstresn;
+	define visitnum / group noprint;
+	define visit / group;
+	define vsstresn / mean 'vital sign result';
+run;
+
+/*section2*/
+
+/*1. Turn on the three macro debugging options discussed in the lecture.*/
+
+options mprint mlogic symbolgen;
+
+/*2. Write a macro program that contains the following:
+  a. Macro parameters for: libref, data set name, class variable list, analysis variable 
+list, statistic list
+  b. A TITLE statement that contains a reference to the macro parameter containing
+the data set name.
+  c. A statement to suppress the printing of the procedure title.
+  d. A PROC MEANS statement that references the macro parameters: libref, data 
+set name, and statistic list.
+  e. A CLASS statement that references the class variable list macro parameter.
+  f. A VAR statement that references the analysis variable list macro parameter. 
+  g. An OUTPUT OUT= statement that creates a data set with the name of the 
+original data set then _stats. 
+  h. A PROC PRINT step to print the data set created in #1g. Subset to _type_ equal 
+to one and _stat_ equal to MIN. A VAR statement with the class variable list and 
+analysis variable list. Remember to create another title statement with the new 
+data set name.*/
+
+%macro courses(libref=,ds=,clas=,analysis=,statistic=);
+title "macro creation with &ds.";
+ods noproctitle;
+proc means data=&libref..&ds.  &statistic. ;
+    class &clas. ;
+    var &analysis.;
+    output out=&ds._stats;
+run;
+title "macro creation with &ds._stats";
+proc print data=&ds._stats;
+    where _type_ =1 and _stat_ = 'MIN';
+    var &clas. &analysis. ;
+run;  
+%mend courses;
+
+
+/*3. Execute the macro created in #1 using the following:
+  a. Libref parameter --> course folder
+Data set name parameter --> order_fact
+Class variable list parameter --> order_type
+Analysis variable parameter --> total_retail_price
+Statistic list parameter --> sum min.
+
+  b. Libref parameter --> course folder
+Data set name parameter --> diabetes
+Class variable list parameter --> location
+Analysis variable parameter --> ratio sab_glu
+Statistic list parameter --> min max. 
+
+  c. Libref parameter --> course folder
+Data set name parameter --> tumor2
+Class variable list parameter --> stage gender
+Analysis variable parameter --> tumorsize
+Statistic list parameter --> sum mean min. */
+
+%courses(libref=course, ds=order_fact, clas=order_type, analysis=total_retail_price, statistic=sum min)
+%courses(libref=course, ds=diabetes, clas=location, analysis=ratio stab_glu, statistic=min max)
+%courses(libref=course, ds=tumor2, clas=stage gen, analysis=tumorsize, statistic=sum mean min)
+
+;
+
+/*4. Write a macro program that contains the following:
+  a. Macro parameters for: data set name
+  b. A TITLE statement that contains a reference to the macro parameter containing 
+the data set name.
+  c. A conditional %IF/%THEN %DO to check that a macro variable called obs is not 
+equal to 0 (zero).
+  d. Inside of %DO block a PROC PRINT step. Write only five observations.*/
+
+%macro check(ds=);
+    title "macro program creation of &ds.";
+    %if &obs. ne 0 %then %do; 
+        proc print data=&ds.(obs=5); run; 
+    %end;
+%mend check;
+
+/*5. Execute the macro created in #4 using statements in the following order:
+  a. A %LET statement setting obs to zero.
+  b. A macro call referencing the sashelp.class data set.
+  c. A %LET statement setting obs to one.
+  d. A macro call referencing the sashelp.heart data set.*/
+
+%let obs=0;
+%check(ds=sashelp.class)
+
+%let obs=1;
+%check(ds=sashelp.heart)
+
+;
+
+/*section3*/
+
+/*1. Write a TITLE statement that uses %SYSFUNC and the TODAY() function to write today’s 
+date in the date9. format. Use this macro variable as the first title in all of the 
+generated output.*/
+
+%let day=%sysfunc(today(),date9.);
+title1 "&day.";
+
+options mprint mlogic symbolgen;
+
+/*2. The goal of this task is to use an appropriate macro function.
+a. Copy these statements into your code.
+
+b. Modify the %LET statements for ds and cross to use the appropriate macro 
+function to parse the list and vars macro variables. The objective is for the PROC 
+FREQ within the macro to use the parsed values.*/
+
+title2 'Q2 macro function application';
+%let list = depression prostate primary_biliary_cirrhosis;
+%let vars = treatmentrecommended*acuteillness stage*treatment spiders*drug;
+
+%macro frq;
+ proc freq data=course.&ds;
+ tables &cross;
+ run;
+%mend frq;
+
+%let ds = %scan(&list,1,' ') ;
+%let cross = %scan(&vars,1,' ');
+%frq
+%let ds = %scan(&list,2,' ');
+%let cross = %scan(&vars,2,' ');
+%frq
+%let ds = %scan(&list,3,' ');
+%let cross = %scan(&vars,3,' ');
+%frq
+
+;
+
+/*3. Rewrite Lab 23 #12 and #13 using a macro program.
+a. Use a %DO loop to loop through the five vital sign tests. HINT: See the third 
+example of the Iterative Processing section of Lecture 25. You can choose to 
+hard-code the stop value or use a macro variable.*/
+
+proc freq data=course.vs noprint;
+	tables vstest*vstestcd / out=testable;
+run;
+data _null_;
+	set testable;
+	length vstest1-vstest5 $20 vsname1-vsname5 $20;
+	array code{*} vstest1--vstest5;
+	array whole{*} vsname1--vsname5;
+	call symputx(cats('vstest', _n_) , vstestcd , 'g');
+	call symputx(cats('vsname', _n_) , vstest, 'g');
+run;
+
+%put &vstest1.;
+%put &vstest2.;
+%put &vstest3.;
+
+title2 'Q3 rewrite of a macro loop program';
+%macro doloop;
+%do i=1 %to 5;
+proc report data=course.vs;
+	where vstestcd="&&vstest&i";
+	column visitnum visit vsstresn;
+	define visitnum / group noprint;
+	define visit / group;
+	define vsstresn / mean 'vital sign result';
+run;
+%end;
+%mend doloop;
+
+*have to call the macro loop after creating it as it won't automatically appear in the result;
+%doloop 
