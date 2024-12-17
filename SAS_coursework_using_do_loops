@@ -1,0 +1,96 @@
+/* the goal of the sas lab is mainly to conduct do loops and datanull.*/
+
+/*1. Use an iterative DO loop to create a brand-new, temporary data set with one 
+observation for every day of August 2024 through December of 2024.
+a. In the DO statement use a date constant for the start and end values – the first 
+and last day. Remember: dates are numeric. This is an advantage when you 
+want to iterate over days. 
+b. For every day, generate a random number with a geometric distribution and a 
+numeric constant of .2. HINT: There is a function that allows you to specify a 
+specific distribution. 
+c. You must explicitly output each date, using an OUTPUT statement.
+d. The date variable should have a format applied. Choose the one you like the 
+best.
+The resulting data set should contain 153 observations and 2 variables.*/
+title 'Q1 dataset creation of time';
+data time;
+    format date date9.;
+    do date= mdy(8,1,2024) to mdy(12,31,2024);
+        rannum=rand("geometric", 0.2);
+        output;
+    end;                       
+run;
+
+
+/*2. Run a PROC MEANS on the data set created in #1. 
+a. Subset to only records in October.
+b. Use the random number you created as the analysis variable.*/
+title 'Q2 statistics of time dataset in October';
+proc means data=time;
+    where month(date)=10;
+    var rannum;
+run;
+
+/*3. Create a temporary data set based on the sashelp.stocks data set.
+a. Subset to the observation with the stock value of IBM and the date of 
+02Aug2004.
+b. Use a DO loop to create five observations.
+c. Increase the value of adjusted close by 4% for each record.
+d. Use the INTNX to increment the date value by one year (you should end up with 02Aug2005, 02Aug2006, etc.).
+e. Keep on the stock, date, and adjusted close variables. 
+The resulting data set should contain 5 observations and 3 variables.*/
+title 'Q3 dataset creation of stock';
+data stock;
+    set sashelp.stocks;
+    where stock='IBM' and date=mdy(8,2,2004);
+    i=0;
+    do while(i<5);
+        i+1;
+        adjclose=adjclose*(1+0.04);
+        date=intnx('year',date, 1);
+        output;
+    end;
+    Keep stock date adjclose;
+run;
+
+/*4. Print the data set created in #3. */
+title 'Q4 printing of dataset of stock';
+proc print data=stock;
+run;
+
+
+/*5. Copy the DATA step you wrote for #3.
+a. Modify the DO loop to be a conditional DO UNTIL loop.
+b. Use the expression of adjusted closer greater than 300.
+The resulting data set should contain 23 observations and 3 variables.*/
+title 'Q5 creation of dataset stock2';
+data stock2;
+    set sashelp.stocks;
+    where stock='IBM' and date=mdy(8,2,2004);
+    
+    do until(adjclose>300);
+        
+        adjclose=adjclose*(1+0.04);
+        date=intnx('year',date, 1);
+        output;
+    end;
+    Keep stock date adjclose;
+run;
+
+
+/*6. Print the data set created in #5. */
+title 'Q6 printing of dataset on stock2';
+proc print data=stock2;
+run;
+
+
+/*7. Use a DATA _NULL_ and PUTLOG statement to write the patient number of patients 
+who are between 40 and 50 years old in the prostate data set in the course folder to the log. 
+The resulting log should show 5 ids.*/
+title 'Q7 creation of _null_ dataset on age between 40 and 50';
+DATA _NULL_;
+    set course.prostate;
+    where 40<=age<=50;
+    putlog age= patientnumber=;
+run;
+
